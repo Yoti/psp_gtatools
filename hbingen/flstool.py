@@ -116,13 +116,14 @@ def proceedFiles(inPath):
             if isFullScan:
                 print('deadbeefdeadbeefdeadbeefdeadbeef', 'deadbeef', at3Name)
             else:
-                print('deadbeef', at3Name)
-                print('[LCS-WW]', binHashesNiLcsWw[idx][1])
-                if binHashesNiVcsEu[idx][1] == binHashesNiVcsUs[idx][1]:
-                    print('[VCS-WW]', binHashesNiVcsEu[idx][1])
+                if headerName == 'AT3HEADERS.BIN':
+                    print(f'deadbeef {at3Name} -> {binHashesNiLcsWw[idx][1]}')
+                elif headerName == 'AT3HEDEU.BIN':
+                    print(f'deadbeef {at3Name} -> {binHashesNiVcsEu[idx][1]}')
+                elif headerName == 'AT3HEDAM.BIN':
+                    print(f'deadbeef {at3Name} -> {binHashesNiVcsUs[idx][1]}')
                 else:
-                    print('[VCS-EU]', binHashesNiVcsEu[idx][1])
-                    print('[VCS-US]', binHashesNiVcsUs[idx][1])
+                    print(f'deadbeef {at3Name}')
         idx += 1
 
 headerName = ''
@@ -137,7 +138,7 @@ def proceedHeader(inPath):
 
     if len(headerData) % headerSize == 0:
         headerName = os.path.basename(inPath)
-        print(f'{headerName} [{len(headerData)}]')
+        print(f'{headerName} ({len(headerData)})')
         if isFullScan:
             print('[!] Parsing BIN file...')
         for i in range(0, len(headerData) // headerSize):
@@ -169,7 +170,7 @@ if __name__ == '__main__':
         exists = os.path.exists(sys.argv[arg])
         isFile = os.path.isfile(sys.argv[arg])
         if exists and not isFile:
-            print(' ->', os.path.basename(sys.argv[arg]))
+            print('[', os.path.basename(sys.argv[arg]), ']')
             proceedDir(sys.argv[arg])
         else:
             print(f'Wrong argument {sys.argv[arg]}')
