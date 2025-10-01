@@ -16,6 +16,45 @@ isoHashesNoIntro = [
     ['5b6b0ed024eaea63511a387efd6b9595', 'Grand Theft Auto - Vice City Stories (USA).iso'],
 ]
 
+binHashesNiLcsWw = [
+    ['fcd32501', 'HEAD.AT3'],
+    ['fc242501', 'DOUBLE.AT3'],
+    ['1cf13d01', 'KJAH.AT3'],
+    ['2c78d301', 'RISE.AT3'],
+    ['0cf63401', 'LIPS.AT3'],
+    ['ac037301', 'MUNDO.AT3'],
+    ['6c78ac01', 'MSX.AT3'],
+    ['7cbc3f01', 'FLASH.AT3'],
+    ['7c7f0d02', 'LCJ.AT3'],
+    ['0cc82a02', 'LCFR.AT3'],
+]
+
+binHashesNiVcsEu = [
+    ['c8d5cb02', 'FLASH.AT3'],
+    ['b8dd9202', 'VROCK.AT3'],
+    ['78dfc701', 'PARADISE.AT3'],
+    ['a88fcd02', 'VCPR.AT3'],
+    ['489dad01', 'VCFL.AT3'],
+    ['682a6e02', 'WAVE_EU.AT3'],
+    ['685b4801', 'FRESH.AT3'],
+    ['d8145101', 'ESPANT.AT3'],
+    ['5807fb02', 'EMOTION.AT3'],
+    ['582c4a00', 'CITY.AT3'],
+]
+
+binHashesNiVcsUs = [
+    ['c8d5cb02', 'FLASH.AT3'],
+    ['b8dd9202', 'VROCK.AT3'],
+    ['78dfc701', 'PARADISE.AT3'],
+    ['a88fcd02', 'VCPR.AT3'],
+    ['489dad01', 'VCFL.AT3'],
+    ['f8629602', 'WAVE_AM.AT3'],
+    ['685b4801', 'FRESH.AT3'],
+    ['d8145101', 'ESPANT.AT3'],
+    ['5807fb02', 'EMOTION.AT3'],
+    ['582c4a00', 'CITY.AT3'],
+]
+
 isoHashesRedump = [
 	['17cd20ebfae0c1d992a74f91234c96e6', 'Grand Theft Auto - Liberty City Stories (Europe) (En,Fr,De,Es,It) (v1.05).iso'],
 	['04c3e22762121ca59e8d6b83a0855211', 'Grand Theft Auto - Liberty City Stories (Europe) (En,Fr,De,Es,It) (v2.00).iso'],
@@ -36,31 +75,62 @@ isoHashesRedump = [
 
 headerSize = 2048
 compareLen = 2048
+isFullScan = False
+if os.path.exists(f'{os.path.splitext(sys.argv[0])[0]}.debug'):
+    isFullScan = True
 
 def proceedFiles(inPath):
+    headers = []
+
     if headerName == '':
         print("Headers list can't be empty!")
         sys.exit()
 
     items = glob.glob(os.path.join(inPath, '*.AT3'))
-    headers = []
+    if isFullScan:
+        print('[!] Checking AT3 files...')
     for item in items:
         with open(item, 'rb') as f:
             data = f.read(compareLen)
             headers.append([os.path.basename(item), data])
+            if isFullScan:
+                print(data[:16].hex(), data[4:8].hex(), os.path.basename(item))
+            #else:
+                #print(data[4:8].hex(), os.path.basename(item))
 
+    if isFullScan:
+        print('[!] Comparing AT3 files...')
+    idx = 0
     for headerItem in headerItems:
-        at3Name = '_NOTFOUND_'
+        at3Name = '????????.AT3'
         for header in headers:
             if headerItem == header[1]:
                 at3Name = header[0]
-        print(at3Name)
+                at3data = header[1]
+        if not at3Name == '????????.AT3':
+            if isFullScan:
+                print(at3data[:16].hex(), at3data[4:8].hex(), at3Name)
+            else:
+                print(at3data[4:8].hex(), at3Name)
+        else:
+            if isFullScan:
+                print('deadbeefdeadbeefdeadbeefdeadbeef', 'deadbeef', at3Name)
+            else:
+                print('deadbeef', at3Name)
+                print('[LCS-WW]', binHashesNiLcsWw[idx][1])
+                if binHashesNiVcsEu[idx][1] == binHashesNiVcsUs[idx][1]:
+                    print('[VCS-WW]', binHashesNiVcsEu[idx][1])
+                else:
+                    print('[VCS-EU]', binHashesNiVcsEu[idx][1])
+                    print('[VCS-US]', binHashesNiVcsUs[idx][1])
+        idx += 1
 
 headerName = ''
 headerItems = []
 def proceedHeader(inPath):
     global headerName
     global headerItems
+    headerItems = []
 
     with open(inPath, 'rb') as headerFile:
         headerData = headerFile.read()
@@ -68,8 +138,13 @@ def proceedHeader(inPath):
     if len(headerData) % headerSize == 0:
         headerName = os.path.basename(inPath)
         print(f'{headerName} [{len(headerData)}]')
+        if isFullScan:
+            print('[!] Parsing BIN file...')
         for i in range(0, len(headerData) // headerSize):
-            headerItems.append(headerData[headerSize*i:headerSize*i+compareLen])
+            headerPart = headerData[headerSize*i:headerSize*i+compareLen]
+            headerItems.append(headerPart)
+            if isFullScan:
+                print(headerPart[:16].hex(), headerPart[4:8].hex(), '????????.AT3')
 
 def proceedDir(inPath):
     items = glob.glob(os.path.join(inPath, '*'))
@@ -81,9 +156,9 @@ def proceedDir(inPath):
         if item.endswith('MUSIC'):
             proceedFiles(item)
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     if len(sys.argv) == 1:
-        print('flstool v20250918 by Yoti')
+        print('flstool v20251001 by Yoti')
         print(f'usage: python3 {os.path.basename(sys.argv[0])} <dir(s)>')
         sys.exit()
 
@@ -94,7 +169,7 @@ if __name__ == "__main__":
         exists = os.path.exists(sys.argv[arg])
         isFile = os.path.isfile(sys.argv[arg])
         if exists and not isFile:
-            print(os.path.basename(sys.argv[arg]))
+            print(' ->', os.path.basename(sys.argv[arg]))
             proceedDir(sys.argv[arg])
         else:
             print(f'Wrong argument {sys.argv[arg]}')
